@@ -1,0 +1,107 @@
+.timeline-container {
+  width: 800px;
+  margin: auto;
+  background: #222;
+  padding: 16px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.controls {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.play-button {
+  background: #444;
+  color: white;
+  border: none;
+  font-size: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.timeline {
+  position: relative;
+  height: 250px;
+  background: #333;
+  border: 1px solid #666;
+  overflow: hidden;
+}
+
+.time-scale {
+  position: relative;
+  height: 20px;
+  background: #555;
+  color: white;
+  text-align: center;
+}
+
+.time-marker {
+  position: absolute;
+  bottom: 0;
+  color: white;
+  font-size: 12px;
+  transform: translateX(-50%);
+}
+
+.time-indicator {
+  position: absolute;
+  width: 3px;
+  height: 100%;
+  background: red;
+  cursor: grab;
+}
+
+.indicator-handle {
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: -7px;
+  left: -6px;
+  cursor: pointer;
+  border: 2px solid black;
+}
+
+.time-label {
+  position: absolute;
+  top: -25px;
+  left: -10px;
+  background: black;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.servo-track {
+  position: relative;
+  height: 50px;
+  border-bottom: 1px solid #444;
+}
+
+.keyframe {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: yellow;
+  border: 2px solid black;
+  border-radius: 50%;
+  cursor: grab;
+}
+
+.keyframe.selected {
+  background: orange;
+}
+
+.servo-name {
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 14px;
+}
