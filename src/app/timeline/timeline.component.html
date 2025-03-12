@@ -1,8 +1,9 @@
 <div class="timeline-container">
   <div class="controls">
-    <button class="play-button" (click)="togglePlayPause()">
+    <button class="play-pause-button" (click)="togglePlayPause()">
       {{ isPlaying ? '❚❚' : '▶' }}
     </button>
+    <span class="timecode">{{ currentTime.toFixed(1) }}s</span>
   </div>
 
   <div class="timeline">
@@ -14,18 +15,19 @@
 
     <div class="time-indicator" [style.left.%]="(currentTime / maxTime) * 100">
       <div class="indicator-handle" (mousedown)="onIndicatorDragStart($event)"></div>
-      <span class="time-label">{{ currentTime.toFixed(1) }}s</span>
     </div>
 
-    <div *ngFor="let servo of servos; let i = index" class="servo-track" [style.top.px]="(i * 50 + 40)" (dblclick)="addKeyframe($event, servo)">
-      <span class="servo-name">{{ servo.name }}</span>
-
-      <div *ngFor="let keyframe of servo.keyframes"
-           class="keyframe"
-           [class.selected]="selectedKeyframe?.keyframe === keyframe"
-           [style.left.%]="(keyframe.time / maxTime) * 100"
-           [style.top.px]="(180 - keyframe.angle)"
-           (mousedown)="onKeyframeDrag($event, servo, keyframe)">
+    <div class="servo-track-container">
+      <div *ngFor="let servo of servos; let i = index" class="servo-track" (dblclick)="addKeyframe($event, servo)">
+        <span class="servo-name">{{ servo.name }}</span>
+        <div *ngFor="let keyframe of servo.keyframes"
+             class="keyframe"
+             [class.selected]="selectedKeyframe?.keyframe === keyframe"
+             [style.left.%]="(keyframe.time / maxTime) * 100"
+             [style.top.px]="180 - keyframe.angle"
+             (mousedown)="onKeyframeDrag($event, servo, keyframe)"
+             (click)="selectKeyframe(servo, keyframe)">
+        </div>
       </div>
     </div>
   </div>

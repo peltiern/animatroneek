@@ -1,48 +1,53 @@
 .timeline-container {
   width: 800px;
   margin: auto;
-  background: #222;
+  background: #111;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   position: relative;
+  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
+  font-family: 'Orbitron', sans-serif;
 }
 
 .controls {
-  text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.play-button {
-  background: #444;
-  color: white;
-  border: none;
-  font-size: 20px;
-  padding: 8px 16px;
+.play-pause-button {
+  font-size: 24px;
   cursor: pointer;
-  border-radius: 4px;
+  background: none;
+  border: none;
+  color: cyan;
+}
+
+.timecode {
+  color: cyan;
+  font-size: 16px;
 }
 
 .timeline {
   position: relative;
-  height: 250px;
-  background: #333;
-  border: 1px solid #666;
+  height: 200px;
+  background: #222;
+  border: 1px solid #444;
   overflow: hidden;
+  border-radius: 8px;
 }
 
 .time-scale {
   position: relative;
   height: 20px;
-  background: #555;
-  color: white;
-  text-align: center;
 }
 
 .time-marker {
   position: absolute;
-  bottom: 0;
-  color: white;
+  top: 0;
   font-size: 12px;
+  color: #00ffff;
   transform: translateX(-50%);
 }
 
@@ -51,57 +56,50 @@
   width: 3px;
   height: 100%;
   background: red;
-  cursor: grab;
 }
 
 .indicator-handle {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: white;
   border-radius: 50%;
   position: absolute;
-  top: -7px;
-  left: -6px;
+  top: -10px;
+  left: -5px;
   cursor: pointer;
-  border: 2px solid black;
 }
 
-.time-label {
-  position: absolute;
-  top: -25px;
-  left: -10px;
-  background: black;
-  color: white;
-  padding: 2px 5px;
-  border-radius: 4px;
-  font-size: 12px;
+.servo-track-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .servo-track {
   position: relative;
-  height: 50px;
-  border-bottom: 1px solid #444;
+  height: 40px;
+  border-top: 1px solid #444;
+  display: flex;
+  align-items: center;
+  padding-left: 100px;
+}
+
+.servo-name {
+  position: absolute;
+  left: -90px;
+  color: #00ffff;
+  font-size: 14px;
 }
 
 .keyframe {
   position: absolute;
   width: 10px;
   height: 10px;
-  background: yellow;
-  border: 2px solid black;
+  background: white;
   border-radius: 50%;
   cursor: grab;
 }
 
 .keyframe.selected {
-  background: orange;
-}
-
-.servo-name {
-  position: absolute;
-  left: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: white;
-  font-size: 14px;
+  outline: 2px solid cyan;
 }

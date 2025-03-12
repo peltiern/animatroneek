@@ -1,6 +1,6 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
-import {NgForOf} from '@angular/common';
+import { NgForOf } from '@angular/common';
 
 interface Keyframe {
   time: number;
@@ -15,10 +15,9 @@ interface Servo {
 @Component({
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
-  imports: [
-    NgForOf
-  ],
-  styleUrls: ['./timeline.component.css']
+  styleUrls: ['./timeline.component.css'],
+  imports: [NgForOf],
+  standalone: true
 })
 export class TimelineComponent implements OnInit {
   servos: Servo[] = [
@@ -31,42 +30,41 @@ export class TimelineComponent implements OnInit {
   maxTime = 5;
   private timerSubscription: Subscription | null = null;
   isDraggingIndicator = false;
-  selectedKeyframe: { servo: Servo; keyframe: Keyframe } | null = null;
+  isDraggingKeyframe = false;
+  selectedKeyframe: { servo: Servo, keyframe: Keyframe } | null = null;
 
-  ngOnInit(): void {}
-
-  togglePlayPause(): void {
+  togglePlayPause() {
     this.isPlaying ? this.pauseTimeline() : this.playTimeline();
   }
 
-  playTimeline(): void {
+  playTimeline() {
+    if (this.isPlaying) return;
     this.isPlaying = true;
-    this.timerSubscription = interval(100).subscribe(() => this.updateTime());
+    this.timerSubscription = interval(100).subscribe(() => {
+      if (this.currentTime >= this.maxTime) {
+        this.stopTimeline();
+        this.currentTime = 0;
+      } else {
+        this.currentTime = Math.round((this.currentTime + 0.1) * 10) / 10;
+        if (!this.isDraggingIndicator) {
+          this.checkKeyframes();
+        }
+      }
+    });
   }
 
-  pauseTimeline(): void {
+  pauseTimeline() {
     this.isPlaying = false;
     this.timerSubscription?.unsubscribe();
   }
 
-  stopTimeline(): void {
-    this.pauseTimeline();
-    this.currentTime = 0;
+  stopTimeline() {
+    this.isPlaying = false;
+    this.timerSubscription?.unsubscribe();
   }
 
-  private updateTime(): void {
-    if (this.currentTime >= this.maxTime) {
-      this.stopTimeline();
-      return;
-    }
-
-    this.currentTime = Math.round((this.currentTime + 0.1) * 10) / 10;
-    if (!this.isDraggingIndicator) {
-      this.triggerKeyframes();
-    }
-  }
-
-  private triggerKeyframes(): void {
+  checkKeyframes() {
+    if (this.isDraggingIndicator) return;
     this.servos.forEach(servo => {
       servo.keyframes.forEach(kf => {
         if (Math.abs(kf.time - this.currentTime) < 0.05) {
@@ -76,27 +74,29 @@ export class TimelineComponent implements OnInit {
     });
   }
 
-  sendServoCommand(servoName: string, angle: number): void {
+  sendServoCommand(servoName: string, angle: number) {
     console.log(`Set ${servoName} to ${angle} degrees`);
   }
 
-  onIndicatorDragStart(event: MouseEvent): void {
+  onIndicatorDragStart(event: MouseEvent) {
     event.preventDefault();
     this.isDraggingIndicator = true;
 
-    const onMouseMove = (moveEvent: MouseEvent) => this.updateTimeFromEvent(moveEvent);
-    const onMouseUp = () => this.stopDragging(onMouseMove);
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      this.updateTimeFromEvent(moveEvent);
+    };
+
+    const onMouseUp = () => {
+      this.isDraggingIndicator = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   }
 
-  private stopDragging(onMouseMove: (event: MouseEvent) => void): void {
-    this.isDraggingIndicator = false;
-    document.removeEventListener('mousemove', onMouseMove);
-  }
-
-  private updateTimeFromEvent(event: MouseEvent): void {
+  updateTimeFromEvent(event: MouseEvent) {
     const timeline = document.querySelector('.timeline') as HTMLElement;
     if (!timeline) return;
 
@@ -105,12 +105,16 @@ export class TimelineComponent implements OnInit {
     this.currentTime = Math.max(0, Math.min(newTime, this.maxTime));
   }
 
-  onKeyframeDrag(event: MouseEvent, servo: Servo, keyframe: Keyframe): void {
+  onKeyframeDrag(event: MouseEvent, servo: Servo, keyframe: Keyframe) {
     event.preventDefault();
+    this.isDraggingKeyframe = true;
+    this.selectedKeyframe = { servo, keyframe };
 
     const timeline = document.querySelector('.timeline') as HTMLElement;
+    if (!timeline) return;
+
     const track = (event.target as HTMLElement).closest('.servo-track') as HTMLElement;
-    if (!timeline || !track) return;
+    if (!track) return;
 
     const timelineRect = timeline.getBoundingClientRect();
     const trackRect = track.getBoundingClientRect();
@@ -118,36 +122,46 @@ export class TimelineComponent implements OnInit {
     const onMouseMove = (moveEvent: MouseEvent) => {
       const newTime = ((moveEvent.clientX - timelineRect.left) / timelineRect.width) * this.maxTime;
       const newAngle = 180 - (moveEvent.clientY - trackRect.top);
+
       keyframe.time = Math.max(0, Math.min(newTime, this.maxTime));
       keyframe.angle = Math.max(0, Math.min(180, newAngle));
     };
 
-    const onMouseUp = () => this.stopDragging(onMouseMove);
+    const onMouseUp = () => {
+      this.isDraggingKeyframe = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   }
 
-  addKeyframe(event: MouseEvent, servo: Servo): void {
+  addKeyframe(event: MouseEvent, servo: Servo) {
     const timeline = document.querySelector('.timeline') as HTMLElement;
-    const track = (event.target as HTMLElement).closest('.servo-track') as HTMLElement;
-
-    if (!timeline || !track) return;
+    if (!timeline) return;
 
     const rect = timeline.getBoundingClientRect();
-    const trackRect = track.getBoundingClientRect();
-
     const newTime = ((event.clientX - rect.left) / rect.width) * this.maxTime;
+
+    const track = (event.target as HTMLElement).closest('.servo-track') as HTMLElement;
+    const trackRect = track.getBoundingClientRect();
     const newAngle = 180 - (event.clientY - trackRect.top);
 
     servo.keyframes.push({ time: newTime, angle: newAngle });
   }
 
+  selectKeyframe(servo: Servo, keyframe: Keyframe) {
+    this.selectedKeyframe = { servo, keyframe };
+  }
+
   @HostListener('document:keydown', ['$event'])
-  handleDeleteKey(event: KeyboardEvent): void {
+  handleDeleteKey(event: KeyboardEvent) {
     if (event.key === 'Delete' && this.selectedKeyframe) {
       this.selectedKeyframe.servo.keyframes = this.selectedKeyframe.servo.keyframes.filter(kf => kf !== this.selectedKeyframe!.keyframe);
       this.selectedKeyframe = null;
     }
   }
+
+  ngOnInit() {}
 }
