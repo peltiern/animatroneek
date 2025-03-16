@@ -1,9 +1,9 @@
 <div class="timeline-container">
   <div class="controls">
-    <button class="play-pause-button" (click)="togglePlayPause()">
-      {{ isPlaying ? '❚❚' : '▶' }}
+    <button class="round-button" (click)="togglePlayPause()">
+      <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
     </button>
-    <span class="timecode">{{ currentTime.toFixed(1) }}s</span>
+    <span class="timecode">{{ currentTime.toFixed(2) }}s</span>
   </div>
 
   <div class="timeline">
@@ -13,12 +13,12 @@
       </span>
     </div>
 
-    <div class="time-indicator" [style.left.%]="(currentTime / maxTime) * 100">
-      <div class="indicator-handle" (mousedown)="onIndicatorDragStart($event)"></div>
+    <div class="time-indicator" [style.left.%]="(currentTime / maxTime) * 100" (mousedown)="onIndicatorDragStart($event)">
+      <div class="indicator-handle"></div>
     </div>
 
     <div class="servo-track-container">
-      <div *ngFor="let servo of servos; let i = index" class="servo-track" (dblclick)="addKeyframe($event, servo)">
+      <div *ngFor="let servo of servos" class="servo-track" (dblclick)="addKeyframe($event, servo)">
         <span class="servo-name">{{ servo.name }}</span>
         <div *ngFor="let keyframe of servo.keyframes"
              class="keyframe"

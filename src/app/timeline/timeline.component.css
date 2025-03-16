@@ -1,12 +1,11 @@
 .timeline-container {
-  width: 800px;
+  width: 90%;
+  max-width: 1200px;
   margin: auto;
-  background: #111;
+  background: #222;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 8px;
   position: relative;
-  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
-  font-family: 'Orbitron', sans-serif;
 }
 
 .controls {
@@ -16,26 +15,41 @@
   gap: 10px;
 }
 
-.play-pause-button {
-  font-size: 24px;
-  cursor: pointer;
-  background: none;
+.round-button {
+  color: #ffdd00;
   border: none;
-  color: cyan;
+  background: #454545;
+  cursor: pointer;
+  outline: none;
+}
+
+.round-button:hover {
+  color: #ff8751;
+  transform: scale(1.1); /* Effet de zoom */
+}
+
+mat-icon {
+  transition: all 0.2s ease-in-out;
+}
+
+mat-icon:hover {
+
 }
 
 .timecode {
-  color: cyan;
-  font-size: 16px;
+  font-size: 1.2rem;
+  color: #fff;
+  margin-left: 10px;
 }
 
 .timeline {
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
   position: relative;
   height: 200px;
-  background: #222;
-  border: 1px solid #444;
-  overflow: hidden;
-  border-radius: 8px;
+  background-color: #333;
+  border: 1px solid #666;
 }
 
 .time-scale {
@@ -53,19 +67,24 @@
 
 .time-indicator {
   position: absolute;
-  width: 3px;
+  width: 2px;
   height: 100%;
   background: red;
+  z-index: 100;
+  cursor: grab;
 }
 
 .indicator-handle {
-  width: 12px;
-  height: 12px;
-  background: white;
-  border-radius: 50%;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-right: 7px solid transparent;
+  border-left: 7px solid transparent;
+  border-top: 22px solid #ff0000;
+  border-bottom: 0;
   position: absolute;
-  top: -10px;
-  left: -5px;
+  top: -20px;
+  left: -6px;
   cursor: pointer;
 }
 
@@ -76,12 +95,9 @@
 }
 
 .servo-track {
+  height: 50px;
+  border-bottom: 1px solid #444;
   position: relative;
-  height: 40px;
-  border-top: 1px solid #444;
-  display: flex;
-  align-items: center;
-  padding-left: 100px;
 }
 
 .servo-name {
@@ -95,9 +111,10 @@
   position: absolute;
   width: 10px;
   height: 10px;
-  background: white;
+  background-color: cyan;
   border-radius: 50%;
-  cursor: grab;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
 }
 
 .keyframe.selected {

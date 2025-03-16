@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
 import { NgForOf } from '@angular/common';
+import {MatIcon} from '@angular/material/icon';
 
 interface Keyframe {
   time: number;
@@ -16,7 +17,7 @@ interface Servo {
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.css'],
-  imports: [NgForOf],
+  imports: [NgForOf, MatIcon],
   standalone: true
 })
 export class TimelineComponent implements OnInit {
@@ -40,12 +41,12 @@ export class TimelineComponent implements OnInit {
   playTimeline() {
     if (this.isPlaying) return;
     this.isPlaying = true;
-    this.timerSubscription = interval(100).subscribe(() => {
+    this.timerSubscription = interval(10).subscribe(() => {
       if (this.currentTime >= this.maxTime) {
         this.stopTimeline();
         this.currentTime = 0;
       } else {
-        this.currentTime = Math.round((this.currentTime + 0.1) * 10) / 10;
+        this.currentTime = Math.round((this.currentTime + 0.01) * 100) / 100;
         if (!this.isDraggingIndicator) {
           this.checkKeyframes();
         }
@@ -67,7 +68,7 @@ export class TimelineComponent implements OnInit {
     if (this.isDraggingIndicator) return;
     this.servos.forEach(servo => {
       servo.keyframes.forEach(kf => {
-        if (Math.abs(kf.time - this.currentTime) < 0.05) {
+        if (Math.abs(kf.time - this.currentTime) < 0.005) {
           this.sendServoCommand(servo.name, kf.angle);
         }
       });
@@ -105,22 +106,25 @@ export class TimelineComponent implements OnInit {
     this.currentTime = Math.max(0, Math.min(newTime, this.maxTime));
   }
 
+  getTimeFromPosition(position: number): number {
+    const timeline = document.querySelector('.timeline') as HTMLElement;
+    const timelineWidth = timeline ? timeline.offsetWidth : 1;
+    return (position / timelineWidth) * this.maxTime;
+  }
+
   onKeyframeDrag(event: MouseEvent, servo: Servo, keyframe: Keyframe) {
     event.preventDefault();
     this.isDraggingKeyframe = true;
     this.selectedKeyframe = { servo, keyframe };
 
     const timeline = document.querySelector('.timeline') as HTMLElement;
-    if (!timeline) return;
-
     const track = (event.target as HTMLElement).closest('.servo-track') as HTMLElement;
-    if (!track) return;
-
     const timelineRect = timeline.getBoundingClientRect();
     const trackRect = track.getBoundingClientRect();
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      const newTime = ((moveEvent.clientX - timelineRect.left) / timelineRect.width) * this.maxTime;
+      const newPosition = moveEvent.clientX - timelineRect.left;
+      const newTime = this.getTimeFromPosition(newPosition);
       const newAngle = 180 - (moveEvent.clientY - trackRect.top);
 
       keyframe.time = Math.max(0, Math.min(newTime, this.maxTime));
@@ -163,5 +167,18 @@ export class TimelineComponent implements OnInit {
     }
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    window.addEventListener('resize', this.updateTimelineWidth);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', this.updateTimelineWidth);
+  }
+
+  updateTimelineWidth = () => {
+    const timeline = document.querySelector('.timeline') as HTMLElement;
+    if (timeline) {
+      this.maxTime = 5;
+    }
+  };
 }
