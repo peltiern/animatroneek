@@ -125,10 +125,12 @@ export class TimelineComponent implements OnInit {
     const onMouseMove = (moveEvent: MouseEvent) => {
       const newPosition = moveEvent.clientX - timelineRect.left;
       const newTime = this.getTimeFromPosition(newPosition);
-      const newAngle = 180 - (moveEvent.clientY - trackRect.top);
+      const newAngle = 180 - ((moveEvent.clientY - trackRect.top) * 180 / 50);
 
       keyframe.time = Math.max(0, Math.min(newTime, this.maxTime));
       keyframe.angle = Math.max(0, Math.min(180, newAngle));
+
+      console.log(`keyframe time = ${keyframe.time} , angle = ${keyframe.angle} degrees`);
     };
 
     const onMouseUp = () => {
@@ -150,7 +152,9 @@ export class TimelineComponent implements OnInit {
 
     const track = (event.target as HTMLElement).closest('.servo-track') as HTMLElement;
     const trackRect = track.getBoundingClientRect();
-    const newAngle = 180 - (event.clientY - trackRect.top);
+    const newAngle = 180 - ((event.clientY - trackRect.top) * 180 / 50);
+
+    console.log(`new keyframe time = ${newTime} , angle = ${newAngle} degrees, servo = ${servo.name}`);
 
     servo.keyframes.push({ time: newTime, angle: newAngle });
   }
@@ -184,5 +188,15 @@ export class TimelineComponent implements OnInit {
 
   counter(n: number): number[] {
     return Array.from({ length: n }, (_, i) => i + 1);
+  }
+
+  exportKeyframes() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.servos, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "keyframes.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    document.body.removeChild(downloadAnchor);
   }
 }

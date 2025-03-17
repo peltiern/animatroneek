@@ -1,34 +1,38 @@
 <div class="timeline-container">
-  <div class="controls">
-    <button class="round-button" (click)="togglePlayPause()">
-      <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
-    </button>
-    <span class="timecode">{{ currentTime.toFixed(2) }}s</span>
-  </div>
+	<div class="controls">
+		<button class="round-button" (click)="togglePlayPause()">
+			<mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+		</button>
+		<span class="timecode">{{ currentTime.toFixed(2) }}s</span>
+		<button class="round-button" (click)="exportKeyframes()">
+			<mat-icon>download</mat-icon>
+		</button>
+	</div>
 
-  <div class="timeline">
-    <div class="time-scale">
-      <span *ngFor="let t of counter(maxTime)" class="time-marker" [style.left.%]="(t / maxTime) * 100">
-        {{ t }}s
-      </span>
-    </div>
+	<div class="timeline">
+		<div class="time-scale">
+			<span *ngFor="let t of counter(maxTime)" class="time-marker" [style.left.%]="(t / maxTime) * 100">
+				{{ t }}s
+			</span>
+		</div>
 
-    <div class="time-indicator" [style.left.%]="(currentTime / maxTime) * 100" (mousedown)="onIndicatorDragStart($event)">
-      <div class="indicator-handle"></div>
-    </div>
+		<div class="time-indicator" [style.left.%]="(currentTime / maxTime) * 100"
+			 (mousedown)="onIndicatorDragStart($event)">
+			<div class="indicator-handle"></div>
+		</div>
 
-    <div class="servo-track-container">
-      <div *ngFor="let servo of servos" class="servo-track" (dblclick)="addKeyframe($event, servo)">
-        <span class="servo-name">{{ servo.name }}</span>
-        <div *ngFor="let keyframe of servo.keyframes"
-             class="keyframe"
-             [class.selected]="selectedKeyframe?.keyframe === keyframe"
-             [style.left.%]="(keyframe.time / maxTime) * 100"
-             [style.top.%]="((180 - keyframe.angle) / 180) * 100"
-             (mousedown)="onKeyframeDrag($event, servo, keyframe)"
-             (click)="selectKeyframe(servo, keyframe)">
-        </div>
-      </div>
-    </div>
-  </div>
+		<div class="servo-track-container">
+			<div *ngFor="let servo of servos" class="servo-track" (dblclick)="addKeyframe($event, servo)">
+				<span class="servo-name">{{ servo.name }}</span>
+				<div *ngFor="let keyframe of servo.keyframes"
+					 class="keyframe"
+					 [class.selected]="selectedKeyframe?.keyframe === keyframe"
+					 [style.left.%]="(keyframe.time / maxTime) * 100"
+					 [style.top.%]="((180 - keyframe.angle) / 180) * 100"
+					 (mousedown)="onKeyframeDrag($event, servo, keyframe)"
+					 (click)="selectKeyframe(servo, keyframe)">
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
