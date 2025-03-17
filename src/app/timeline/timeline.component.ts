@@ -181,4 +181,8 @@ export class TimelineComponent implements OnInit {
       this.maxTime = 5;
     }
   };
+
+  counter(n: number): number[] {
+    return Array.from({ length: n }, (_, i) => i + 1);
+  }
 }

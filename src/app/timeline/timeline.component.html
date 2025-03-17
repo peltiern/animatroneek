@@ -8,7 +8,7 @@
 
   <div class="timeline">
     <div class="time-scale">
-      <span *ngFor="let t of [0, 1, 2, 3, 4, 5]" class="time-marker" [style.left.%]="(t / maxTime) * 100">
+      <span *ngFor="let t of counter(maxTime)" class="time-marker" [style.left.%]="(t / maxTime) * 100">
         {{ t }}s
       </span>
     </div>
@@ -24,7 +24,7 @@
              class="keyframe"
              [class.selected]="selectedKeyframe?.keyframe === keyframe"
              [style.left.%]="(keyframe.time / maxTime) * 100"
-             [style.top.px]="180 - keyframe.angle"
+             [style.top.%]="((180 - keyframe.angle) / 180) * 100"
              (mousedown)="onKeyframeDrag($event, servo, keyframe)"
              (click)="selectKeyframe(servo, keyframe)">
         </div>
