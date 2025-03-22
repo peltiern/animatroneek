@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
 import { NgForOf } from '@angular/common';
 import {MatIcon} from '@angular/material/icon';
+import {RobotViewerComponent} from './robot-viewer/robot-viewer.component';
 
 interface Keyframe {
   time: number;
@@ -17,7 +18,7 @@ interface Servo {
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.css'],
-  imports: [NgForOf, MatIcon],
+  imports: [NgForOf, MatIcon, RobotViewerComponent],
   standalone: true
 })
 export class TimelineComponent implements OnInit {
@@ -33,6 +34,9 @@ export class TimelineComponent implements OnInit {
   isDraggingIndicator = false;
   isDraggingKeyframe = false;
   selectedKeyframe: { servo: Servo, keyframe: Keyframe } | null = null;
+
+  servoAngles: number[] = [0, 0]; // Servo 1 (Tilt) et Servo 2 (Pan)
+
 
   togglePlayPause() {
     this.isPlaying ? this.pauseTimeline() : this.playTimeline();
@@ -77,7 +81,14 @@ export class TimelineComponent implements OnInit {
 
   sendServoCommand(servoName: string, angle: number) {
     console.log(`Set ${servoName} to ${angle} degrees`);
+
+    if (servoName === 'Servo 1') {
+      this.servoAngles[0] = angle; // Tilt
+    } else if (servoName === 'Servo 2') {
+      this.servoAngles[1] = angle; // Pan
+    }
   }
+
 
   onIndicatorDragStart(event: MouseEvent) {
     event.preventDefault();
