@@ -1,9 +1,6 @@
-import { Component, Input, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Input, ViewChild} from '@angular/core';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 
 
 @Component({
@@ -13,60 +10,63 @@ import type { Font } from 'three/examples/jsm/loaders/FontLoader.js';
   standalone: true
 })
 export class RobotViewerComponent implements AfterViewInit {
-  @ViewChild('canvas3D', { static: true }) canvasRef!: ElementRef;
-  @ViewChild('compassCanvas', { static: true }) compassRef!: ElementRef;
+  @ViewChild('rendererContainer', { static: true }) rendererContainer!: ElementRef;
   @Input() tiltAngle: number = 0;
   @Input() panAngle: number = 0;
 
   private scene!: THREE.Scene;
+  private model!: THREE.Object3D;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
   private controls!: OrbitControls;
+  private axesScene!: THREE.Scene;
+  private axesHelper!: THREE.AxesHelper;
+  private axesCamera!: THREE.OrthographicCamera;
+  private axesRenderer!: THREE.WebGLRenderer;
   private head!: THREE.Object3D;
   private panPivot!: THREE.Object3D;
   private tiltPivot!: THREE.Object3D;
 
-  private compassScene!: THREE.Scene;
-  private compassCamera!: THREE.OrthographicCamera;
-  private compassRenderer!: THREE.WebGLRenderer;
-
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.initScene();
-    this.initCompass();
     this.animate();
   }
 
-  initScene() {
-    const canvas = this.canvasRef.nativeElement;
+  private initScene(): void {
+    const width = this.rendererContainer.nativeElement.clientWidth;
+    const height = this.rendererContainer.nativeElement.clientHeight;
+
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-    this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    this.camera.position.set(0, 2, 5);
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer.setSize(width, height);
+    this.rendererContainer.nativeElement.appendChild(this.renderer.domElement);
+    this.renderer.domElement.style.width = '100%';
+    this.renderer.domElement.style.height = '100%';
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
-    this.controls.screenSpacePanning = false;
-    this.controls.minDistance = 3;
-    this.controls.maxDistance = 10;
 
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
+    const light = new THREE.AmbientLight(0xffffff, 0.6);
     this.scene.add(light);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5);
+    this.scene.add(directionalLight);
 
     this.createRobot();
-    this.camera.position.set(5, 5, 5);
-    this.camera.lookAt(0, 1.5, 0);
+    this.setupAxesIndicator();
   }
 
   private createRobot() {
     const bodyGeometry = new THREE.BoxGeometry(2, 3, 1);
     const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x3498db });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    this.scene.add(body);
+    this.model = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    this.scene.add(this.model);
 
     this.panPivot = new THREE.Object3D();
-    body.add(this.panPivot);
+    this.model.add(this.panPivot);
 
     this.tiltPivot = new THREE.Object3D();
     this.panPivot.add(this.tiltPivot);
@@ -77,49 +77,94 @@ export class RobotViewerComponent implements AfterViewInit {
 
     this.tiltPivot.position.y = 2;
     this.tiltPivot.add(this.head);
+
+    // Mettre à jour l'affichage du modèle
+    this.updateModel = () => {
+      // Copier la rotation de la caméra des axes dans celle de la scène du modèle
+      this.scene.quaternion.copy(this.axesCamera.quaternion);
+
+      // Rendu de la scène du modèle
+      this.camera.updateProjectionMatrix();
+      this.renderer.render(this.scene, this.camera);
+    };
   }
 
-  private initCompass() {
-    const canvas = this.compassRef.nativeElement;
-    this.compassScene = new THREE.Scene();
-    this.compassCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-    this.compassRenderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-    this.compassRenderer.setSize(150, 150);
-    this.compassCamera.position.set(0, 0, 5);
+  private setupAxesIndicator(): void {
+    // Créer une mini-scène pour l'indicateur des axes
+    this.axesScene = new THREE.Scene();
 
-    const axes = new THREE.Group();
+    // Groupe pivotant autour de (0,0,0)
+    const axesGroup = new THREE.Group();
+    this.axesScene.add(axesGroup);
 
-    const createAxis = (color: number, position: THREE.Vector3, label: string) => {
-      const material = new THREE.MeshBasicMaterial({ color });
-      const geometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 8);
-      const axis = new THREE.Mesh(geometry, material);
-      axis.position.copy(position);
-      axes.add(axis);
+    // Ajouter l'AxesHelper au groupe
+    this.axesHelper = new THREE.AxesHelper(1);
+    axesGroup.add(this.axesHelper);
 
-      const arrowGeometry = new THREE.ConeGeometry(0.1, 0.2, 8);
-      const arrow = new THREE.Mesh(arrowGeometry, material);
-      arrow.position.copy(position.clone().multiplyScalar(1.2));
-      axes.add(arrow);
+    // Mini caméra orthographique
+    this.axesCamera = new THREE.OrthographicCamera(-0.8, 0.8, 0.8, -0.8, 0.1, 10);
+    this.axesCamera.position.set(0, 0, 1);
+    this.axesCamera.lookAt(0, 0, 0);
 
-      const loader = new FontLoader();
-      loader.load('/fonts/helvetiker_regular.typeface.json', (font) => {
-        const textGeometry = new TextGeometry(label, {
-          font: font,
-          size: 0.2,
-          depth: 0.02,
-        });
-        const textMaterial = new THREE.MeshBasicMaterial({ color });
-        const text = new THREE.Mesh(textGeometry, textMaterial);
-        text.position.copy(position.clone().multiplyScalar(1.4));
-        axes.add(text);
-      });
+    // Renderer séparé pour les axes
+    this.axesRenderer = new THREE.WebGLRenderer({ alpha: true });
+    this.axesRenderer.setSize(150, 150);
+    this.axesRenderer.domElement.style.position = 'absolute';
+    this.axesRenderer.domElement.style.bottom = '10px';
+    this.axesRenderer.domElement.style.right = '10px';
+    // this.axesRenderer.domElement.style.border = '1px solid rgba(0, 0, 0, 0.8)';
+    this.axesRenderer.domElement.style.background = 'rgba(0, 0, 0, 0.8)';
+
+    this.rendererContainer.nativeElement.appendChild(this.axesRenderer.domElement);
+    console.log(this.axesRenderer.domElement.classList); // Vérifie si la classe est bien ajoutée
+
+
+    // 🎯 Rendre interactif
+    let isDragging = false;
+    let previousMouseX = 0;
+    let previousMouseY = 0;
+
+    this.axesRenderer.domElement.addEventListener('mousedown', (event) => {
+      isDragging = true;
+      previousMouseX = event.clientX;
+      previousMouseY = event.clientY;
+    });
+
+    window.addEventListener('mousemove', (event) => {
+      if (!isDragging) return;
+
+      const deltaX = event.clientX - previousMouseX;
+      const deltaY = event.clientY - previousMouseY;
+
+      previousMouseX = event.clientX;
+      previousMouseY = event.clientY;
+
+      const rotationSpeed = 0.005;
+
+      // 🎯 Appliquer la rotation aux axes
+      axesGroup.rotation.y += deltaX * rotationSpeed;
+      axesGroup.rotation.x += deltaY * rotationSpeed;
+
+      // 🎯 Appliquer la même rotation au modèle
+      if (this.model) {
+        this.model.rotation.y += deltaX * rotationSpeed;
+        this.model.rotation.x += deltaY * rotationSpeed;
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    // Mettre à jour l'affichage des axes
+    this.updateAxesIndicator = () => {
+      // Copier la rotation de la caméra principale dans l'indicateur des axes
+      axesGroup.quaternion.copy(this.camera.quaternion);
+
+      // Rendu de la mini-scène des axes
+      this.axesCamera.updateProjectionMatrix();
+      this.axesRenderer.render(this.axesScene, this.axesCamera);
     };
-
-    createAxis(0xff0000, new THREE.Vector3(1, 0, 0), 'X');
-    createAxis(0x00ff00, new THREE.Vector3(0, 1, 0), 'Y');
-    createAxis(0x0000ff, new THREE.Vector3(0, 0, 1), 'Z');
-
-    this.compassScene.add(axes);
   }
 
   animate = () => {
@@ -128,8 +173,16 @@ export class RobotViewerComponent implements AfterViewInit {
     this.panPivot.rotation.y = THREE.MathUtils.degToRad(this.panAngle);
     this.tiltPivot.rotation.x = THREE.MathUtils.degToRad(this.tiltAngle);
     this.renderer.render(this.scene, this.camera);
-
-    this.compassCamera.quaternion.copy(this.camera.quaternion);
-    this.compassRenderer.render(this.compassScene, this.compassCamera);
+    this.axesRenderer.render(this.axesScene, this.axesCamera);
+    this.updateAxesIndicator();
+    this.updateModel();
   };
+
+  private updateAxesIndicator(): void {
+    this.axesRenderer.render(this.scene, this.axesCamera);
+  }
+
+  private updateModel(): void {
+    this.renderer.render(this.axesScene, this.camera);
+  }
 }
