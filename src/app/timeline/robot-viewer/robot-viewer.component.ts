@@ -113,7 +113,7 @@ export class RobotViewerComponent implements AfterViewInit {
     this.axesRenderer.domElement.style.bottom = '10px';
     this.axesRenderer.domElement.style.right = '10px';
     // this.axesRenderer.domElement.style.border = '1px solid rgba(0, 0, 0, 0.8)';
-    this.axesRenderer.domElement.style.background = 'rgba(0, 0, 0, 0.8)';
+    this.axesRenderer.domElement.style.background = 'rgba(255, 255, 255, 0.2)';
 
     this.rendererContainer.nativeElement.appendChild(this.axesRenderer.domElement);
     console.log(this.axesRenderer.domElement.classList); // Vérifie si la classe est bien ajoutée

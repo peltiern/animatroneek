@@ -10,5 +10,5 @@ import {TimelineComponent} from './timeline/timeline.component';
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'puppeter';
+  title = 'animatroneek';
 }

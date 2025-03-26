@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "puppeter": {
+    "animatroneek": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/puppeter",
+            "outputPath": "dist/animatroneek",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -63,10 +63,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "puppeter:build:production"
+              "buildTarget": "animatroneek:build:production"
             },
             "development": {
-              "buildTarget": "puppeter:build:development"
+              "buildTarget": "animatroneek:build:development"
             }
           },
           "defaultConfiguration": "development"
