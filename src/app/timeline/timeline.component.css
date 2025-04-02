@@ -120,3 +120,31 @@ mat-icon:hover {
 .keyframe.selected {
   outline: 2px solid cyan;
 }
+
+.bezier-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bezier-curve {
+  fill: none;
+  stroke: #00ffff;
+  stroke-width: 2px;
+}
+
+.bezier-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: yellow;
+  border: 2px solid #ff5722;
+  border-radius: 50%;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}

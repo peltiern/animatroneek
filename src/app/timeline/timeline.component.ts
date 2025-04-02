@@ -1,12 +1,15 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-import { interval, Subscription } from 'rxjs';
-import { NgForOf } from '@angular/common';
+import {Component, HostListener, OnInit} from '@angular/core';
+import {interval, Subscription} from 'rxjs';
+import {NgForOf} from '@angular/common';
 import {MatIcon} from '@angular/material/icon';
 import {RobotViewerComponent} from './robot-viewer/robot-viewer.component';
 
 interface Keyframe {
   time: number;
   angle: number;
+  controlIn?: { x: number; y: number }; // Position de la poignée d'entrée
+  controlOut?: { x: number; y: number }; // Position de la poignée de sortie
+
 }
 
 interface Servo {
@@ -23,8 +26,8 @@ interface Servo {
 })
 export class TimelineComponent implements OnInit {
   servos: Servo[] = [
-    { name: 'Servo 1', keyframes: [{ time: 0, angle: 10 }, { time: 2, angle: 90 }, { time: 4, angle: 45 }] },
-    { name: 'Servo 2', keyframes: [{ time: 1, angle: 30 }, { time: 3, angle: 120 }] }
+    {name: 'Servo 1', keyframes: [{time: 0, angle: 10}, {time: 2, angle: 90}, {time: 4, angle: 45}]},
+    {name: 'Servo 2', keyframes: [{time: 1, angle: 30}, {time: 3, angle: 120}]}
   ];
 
   currentTime = 0;
@@ -126,7 +129,7 @@ export class TimelineComponent implements OnInit {
   onKeyframeDrag(event: MouseEvent, servo: Servo, keyframe: Keyframe) {
     event.preventDefault();
     this.isDraggingKeyframe = true;
-    this.selectedKeyframe = { servo, keyframe };
+    this.selectedKeyframe = {servo, keyframe};
 
     const timeline = document.querySelector('.timeline') as HTMLElement;
     const track = (event.target as HTMLElement).closest('.servo-track') as HTMLElement;
@@ -167,11 +170,11 @@ export class TimelineComponent implements OnInit {
 
     console.log(`new keyframe time = ${newTime} , angle = ${newAngle} degrees, servo = ${servo.name}`);
 
-    servo.keyframes.push({ time: newTime, angle: newAngle });
+    servo.keyframes.push({time: newTime, angle: newAngle});
   }
 
   selectKeyframe(servo: Servo, keyframe: Keyframe) {
-    this.selectedKeyframe = { servo, keyframe };
+    this.selectedKeyframe = {servo, keyframe};
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -198,7 +201,7 @@ export class TimelineComponent implements OnInit {
   };
 
   counter(n: number): number[] {
-    return Array.from({ length: n }, (_, i) => i + 1);
+    return Array.from({length: n}, (_, i) => i + 1);
   }
 
   exportKeyframes() {
@@ -209,5 +212,54 @@ export class TimelineComponent implements OnInit {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
+  }
+
+  // Génère le chemin d'une courbe Bézier entre deux keyframes
+  generateBezierPath(start: Keyframe, end: Keyframe): string {
+    const p0 = {x: (start.time / this.maxTime) * 100, y: ((180 - start.angle) / 180) * 100};
+    const p1 = start.controlOut ?? p0; // Si absente, la poignée suit la position du point
+    const p2 = end.controlIn ?? p0;   // Pareil pour la poignée d'entrée
+    const p3 = {x: (end.time / this.maxTime) * 100, y: ((180 - end.angle) / 180) * 100};
+
+    return `M ${p0.x},${p0.y} C ${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`;
+  }
+
+// Récupère les paires de keyframes pour dessiner les courbes entre elles
+  getKeyframePairs(keyframes: Keyframe[]): [Keyframe, Keyframe][] {
+    const pairs: [Keyframe, Keyframe][] = [];
+    for (let i = 0; i < keyframes.length - 1; i++) {
+      pairs.push([keyframes[i], keyframes[i + 1]]);
+    }
+    return pairs;
+  }
+
+  onHandleDrag(event: MouseEvent, keyframe: Keyframe, handle: 'controlIn' | 'controlOut') {
+    event.preventDefault();
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const dx = ((moveEvent.clientX - startX) / this.maxTime) * 100;
+      const dy = ((moveEvent.clientY - startY) / 180) * 100;
+
+      if (handle === 'controlIn') {
+        if (!keyframe.controlIn) keyframe.controlIn = {x: keyframe.time, y: keyframe.angle};
+        keyframe.controlIn.x += dx;
+        keyframe.controlIn.y += dy;
+      } else if (handle === 'controlOut') {
+        if (!keyframe.controlOut) keyframe.controlOut = {x: keyframe.time, y: keyframe.angle};
+        keyframe.controlOut.x += dx;
+        keyframe.controlOut.y += dy;
+      }
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   }
 }

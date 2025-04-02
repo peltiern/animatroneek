@@ -1,0 +1,20 @@
+/* CSS */
+
+/* Style du conteneur SVG */
+svg {
+  border: 1px solid black;
+  cursor: crosshair;
+}
+
+/* Style des points de contrôle */
+.point {
+  fill: red;
+  stroke: black;
+  stroke-width: 1px;
+  cursor: pointer;
+}
+
+/* Style du point sélectionné */
+.point:selected {
+  fill: yellow;
+}
